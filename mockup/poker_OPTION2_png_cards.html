@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OPTION 2 — PNG Card Images + Textures</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0c12; color: #e0e0e0; font-family: Arial; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+.label-bar { padding: 8px 16px; background: #facc15; color: #000; font-weight: 900; font-size: 14px; text-align: center; }
+
+.table-area {
+    flex: 1; position: relative; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 55%, rgba(15,30,15,0.6) 0%, #0a0c12 65%);
+}
+
+/* 3D perspective table */
+.poker-table {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) perspective(900px) rotateX(20deg);
+    width: 650px; height: 350px;
+}
+
+.table-felt {
+    width: 100%; height: 100%; border-radius: 175px; position: relative;
+    /* Realistic felt texture using CSS noise */
+    background:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse, #1a6a2a 0%, #145a20 30%, #0f4018 60%, #0a2a10 100%);
+    border: 12px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.7), inset 0 0 40px rgba(0,0,0,0.25);
+}
+
+/* Wood border with grain texture */
+.table-felt::before {
+    content: ''; position: absolute; inset: -12px; border-radius: 187px;
+    background:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02 0.5' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)' opacity='0.15'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, #5a3518, #3a1e0c, #4a2a14, #2a1508, #3a1e0c);
+    z-index: -1;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.8), inset 0 2px 0 rgba(255,255,255,0.05);
+}
+
+/* Gold inner rail */
+.table-felt::after {
+    content: ''; position: absolute; inset: 6px; border-radius: 165px;
+    border: 2px solid rgba(250,204,21,0.1);
+    box-shadow: inset 0 0 20px rgba(250,204,21,0.02);
+}
+
+/* Real PNG cards from deckofcardsapi.com */
+.community-cards {
+    position: absolute; top: 40%; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+}
+
+.real-card {
+    width: 70px; height: 100px; border-radius: 6px; overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.real-card:hover { transform: translateY(-6px) scale(1.05); }
+.real-card img { width: 100%; height: 100%; object-fit: cover; }
+
+.card-back {
+    width: 70px; height: 100px; border-radius: 6px;
+    background:
+        repeating-linear-gradient(45deg, rgba(250,204,21,0.04), rgba(250,204,21,0.04) 2px, transparent 2px, transparent 8px),
+        linear-gradient(135deg, #1a3a8a, #0f2668, #0a1a50);
+    border: 2px solid rgba(250,204,21,0.15);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+}
+.card-back::after { content: '♠'; color: rgba(250,204,21,0.15); font-size: 24px; }
+
+/* POT with chip graphics */
+.pot-area {
+    position: absolute; top: 28%; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.pot-chips {
+    display: flex; gap: 4px;
+}
+.chip-img {
+    width: 28px; height: 28px; border-radius: 50%; position: relative;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+}
+.chip-img.gold { background: radial-gradient(circle at 35% 35%, #ffe066, #facc15 40%, #c8a010 70%, #8a6e08); border: 2px solid #a08010; }
+.chip-img.red { background: radial-gradient(circle at 35% 35%, #ff6666, #dd0000 40%, #990000 70%); border: 2px solid #880000; }
+.chip-img.blue { background: radial-gradient(circle at 35% 35%, #6699ff, #3366cc 40%, #1a3399 70%); border: 2px solid #1530aa; }
+.chip-img.green { background: radial-gradient(circle at 35% 35%, #66ff66, #10cc10 40%, #088808 70%); border: 2px solid #066606; }
+.chip-img.black { background: radial-gradient(circle at 35% 35%, #666, #333 40%, #111 70%); border: 2px solid #000; }
+/* Chip markings */
+.chip-img::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,0.3); }
+.chip-img::after { content: attr(data-val); position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #fff; font-size: 8px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+.pot-text {
+    background: rgba(0,0,0,0.7); padding: 4px 16px; border-radius: 12px;
+    color: #facc15; font-size: 14px; font-weight: 800;
+    border: 1px solid rgba(250,204,21,0.2);
+    text-shadow: 0 0 8px rgba(250,204,21,0.3);
+}
+
+/* HERO CARDS (big, bottom) */
+.hero-cards {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.7));
+}
+.hero-cards .real-card { width: 90px; height: 130px; }
+.hero-cards .real-card:hover { transform: translateY(-12px) scale(1.08); }
+
+/* Player seats with realistic avatars */
+.player {
+    position: absolute; display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.avatar {
+    width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
+    border: 3px solid rgba(100,100,100,0.4);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    /* Placeholder avatar with gradient */
+    background: linear-gradient(135deg, #2a3040, #1a2030);
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
+}
+.avatar.active { border-color: #facc15; box-shadow: 0 0 20px rgba(250,204,21,0.3); }
+.avatar.folded { opacity: 0.3; }
+
+.p-name { font-size: 10px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+.p-stack { font-size: 9px; color: #facc15; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+.p-badge { font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+
+/* Player mini cards */
+.p-cards { display: flex; gap: 2px; margin-top: 2px; }
+.p-cards .card-back { width: 28px; height: 40px; border-radius: 3px; border-width: 1px; }
+.p-cards .card-back::after { font-size: 12px; }
+
+/* Hand strength */
+.hand-badge {
+    position: absolute; bottom: 175px; left: 50%; transform: translateX(-50%);
+    background: rgba(16,235,4,0.12); border: 1px solid rgba(16,235,4,0.25);
+    padding: 5px 20px; border-radius: 5px;
+    color: #10eb04; font-size: 12px; font-weight: 800;
+    text-shadow: 0 0 8px rgba(16,235,4,0.3);
+}
+
+/* Action panel */
+.actions {
+    position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; align-items: center;
+    background: rgba(10,14,22,0.88); backdrop-filter: blur(12px);
+    padding: 8px 14px; border-radius: 10px;
+    border: 1px solid rgba(250,204,21,0.1);
+}
+.a-btn { padding: 8px 18px; border: none; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.a-btn.fold { background: rgba(80,80,80,0.4); color: #999; }
+.a-btn.check { background: rgba(16,235,4,0.15); color: #10eb04; }
+.a-btn.call { background: rgba(59,130,246,0.2); color: #6db3f8; }
+.a-btn.raise { background: linear-gradient(135deg, #facc15, #f59e0b); color: #0a0c12; }
+.a-btn.allin { background: linear-gradient(135deg, #eb0404, #cc0000); color: #fff; }
+
+.info { position: absolute; top: 8px; left: 16px; font-size: 20px; color: #facc15; font-weight: 900; }
+.info2 { position: absolute; top: 34px; left: 16px; font-size: 11px; color: #888; }
+</style>
+</head>
+<body>
+<div class="label-bar">OPTION 2 — Real PNG Card Images + CSS Textures (No OpenGL)</div>
+
+<div class="table-area">
+    <div class="info">♠ OMNIBUS POKER</div>
+    <div class="info2">Diamond Room · Blinds 25/50 · 6/9 players</div>
+
+    <div class="poker-table">
+        <div class="table-felt">
+            <!-- POT -->
+            <div class="pot-area">
+                <div class="pot-chips">
+                    <div class="chip-img gold" data-val="500"></div>
+                    <div class="chip-img gold" data-val="500"></div>
+                    <div class="chip-img red" data-val="100"></div>
+                    <div class="chip-img red" data-val="100"></div>
+                    <div class="chip-img blue" data-val="25"></div>
+                    <div class="chip-img blue" data-val="25"></div>
+                </div>
+                <div class="pot-text">POT: 1,250 EUR</div>
+            </div>
+
+            <!-- COMMUNITY — Real PNG cards -->
+            <div class="community-cards">
+                <div class="real-card"><img src="../assets/cards/AS.png" alt="A♠"></div>
+                <div class="real-card"><img src="../assets/cards/KH.png" alt="K♥"></div>
+                <div class="real-card"><img src="../assets/cards/7C.png" alt="7♣"></div>
+                <div class="real-card"><img src="../assets/cards/QD.png" alt="Q♦"></div>
+                <div class="card-back"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Players -->
+    <div class="player" style="bottom: 170px; left: 50%; transform: translateX(-50%);">
+        <div class="avatar active">😎</div>
+        <div class="p-name" style="color:#facc15">YOU</div>
+        <div class="p-stack">12,450 EUR</div>
+    </div>
+    <div class="player" style="bottom: 220px; left: 12%;">
+        <div class="avatar">🤠</div><div class="p-name">CryptoKing</div><div class="p-stack">8,200</div>
+        <div class="p-badge" style="background:rgba(59,130,246,0.3);color:#6db3f8;">Call 100</div>
+        <div class="p-cards"><div class="card-back"></div><div class="card-back"></div></div>
+    </div>
+    <div class="player" style="top: 35%; left: 5%;">
+        <div class="avatar folded">👨‍💼</div><div class="p-name" style="opacity:0.4">BitWhale</div>
+        <div class="p-badge" style="background:rgba(80,80,80,0.3);color:#888;">Fold</div>
+    </div>
+    <div class="player" style="top: 10%; left: 20%;">
+        <div class="avatar">🎩</div><div class="p-name">Satoshi99</div><div class="p-stack">15,600</div>
+        <div class="p-badge" style="background:rgba(250,204,21,0.3);color:#facc15;">Raise 300</div>
+        <div class="p-cards"><div class="card-back"></div><div class="card-back"></div></div>
+    </div>
+    <div class="player" style="top: 3%; left: 50%; transform: translateX(-50%);">
+        <div class="avatar">🤖</div><div class="p-name">AI_Shark</div><div class="p-stack">22,100</div>
+        <div class="p-cards"><div class="card-back"></div><div class="card-back"></div></div>
+    </div>
+    <div class="player" style="top: 35%; right: 5%;">
+        <div class="avatar">🧔</div><div class="p-name">Miner_X</div><div class="p-stack">31,400</div>
+        <div class="p-badge" style="background:rgba(235,4,4,0.3);color:#ff4444;animation:pulse 1s infinite;">ALL IN!</div>
+        <div class="p-cards"><div class="card-back"></div><div class="card-back"></div></div>
+    </div>
+
+    <!-- HERO CARDS — Big real PNGs -->
+    <div class="hand-badge">♠ Pair of Aces</div>
+    <div class="hero-cards">
+        <div class="real-card"><img src="../assets/cards/AS.png" alt="A♠"></div>
+        <div class="real-card"><img src="../assets/cards/AH.png" alt="A♥"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <button class="a-btn fold">Fold</button>
+        <button class="a-btn check">Check</button>
+        <button class="a-btn call">Call 300</button>
+        <button class="a-btn raise">Raise 1,000</button>
+        <button class="a-btn allin">All-In</button>
+    </div>
+</div>
+
+<style>@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }</style>
+</body>
+</html>

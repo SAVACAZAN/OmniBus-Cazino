@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>OmniBus Casino | Modern Poker Table</title>
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts: modern sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0a0c18, #03060c);
+            height: 100vh;
+            overflow: hidden;
+            color: #f0f3fa;
+        }
+
+        /* Modern glass topbar */
+        .topbar {
+            backdrop-filter: blur(16px);
+            background: rgba(8, 12, 24, 0.65);
+            border-bottom: 1px solid rgba(250, 204, 21, 0.25);
+            height: 52px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #facc15, #ffb347);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .room-info {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            padding: 4px 12px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .room-info b {
+            color: #facc15;
+        }
+
+        .bal {
+            background: rgba(0,0,0,0.4);
+            padding: 4px 12px;
+            border-radius: 32px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #facc15;
+        }
+
+        .bal i {
+            margin-right: 6px;
+            font-size: 0.7rem;
+        }
+
+        .leave-btn {
+            margin-left: auto;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ff8a8a;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .leave-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+        }
+
+        /* main layout */
+        .main {
+            display: flex;
+            height: calc(100vh - 74px);
+            overflow: hidden;
+        }
+
+        /* Table area with dynamic depth */
+        .table-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at 30% 40%, #10161f, #03060b);
+        }
+
+        /* Modern poker felt + wood rail */
+        .poker-table {
+            width: 780px;
+            height: 420px;
+            position: relative;
+            background: radial-gradient(ellipse at 30% 35%, #1e5920, #0a2f0a);
+            border-radius: 260px;
+            border: 12px solid #2c1e12;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3), 0 0 0 2px rgba(250,204,21,0.2);
+            transition: all 0.2s;
+        }
+
+        .poker-table::after {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            border-radius: 250px;
+            border: 1px solid rgba(250,204,21,0.3);
+            pointer-events: none;
+        }
+
+        /* community cards modern */
+        .community-cards {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.2);
+            padding: 6px 12px;
+            border-radius: 28px;
+            backdrop-filter: blur(2px);
+        }
+
+        .card {
+            width: 56px;
+            height: 78px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.3rem;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            transition: transform 0.1s ease;
+        }
+
+        .card.face-up {
+            background: linear-gradient(145deg, #fff, #f6f9ff);
+            border: 1px solid #ddd;
+            color: #111;
+        }
+
+        .card.face-up.red {
+            color: #c53a1f;
+        }
+
+        .card.face-down {
+            background: repeating-linear-gradient(45deg, #142a6e, #142a6e 8px, #1e3a8a 8px, #1e3a8a 16px);
+            border: 1px solid #3b6eff;
+            box-shadow: inset 0 0 0 1px rgba(255,215,0,0.2);
+        }
+
+        .card.face-down::after {
+            content: '?';
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: rgba(255,215,0,0.7);
+        }
+
+        /* Pot display premium */
+        .pot-display {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 5px 18px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #ffd966;
+            border: 1px solid rgba(255,200,50,0.4);
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Seats modern positioning (flexible) */
+        .player-seat {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+        }
+
+        /* Avatar modern circle with gradient */
+        .player-avatar {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(145deg, #2c3e4e, #1e2a38);
+            border: 2px solid rgba(250,204,21,0.5);
+            transition: all 0.2s;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+        }
+
+        .player-avatar.active-turn {
+            border: 3px solid #facc15;
+            box-shadow: 0 0 20px rgba(250,204,21,0.6);
+            transform: scale(1.02);
+        }
+
+        .player-avatar.folded-avatar {
+            opacity: 0.45;
+            filter: grayscale(0.5);
+            border-color: #5a626e;
+        }
+
+        .player-info {
+            text-align: center;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(8px);
+            padding: 4px 8px;
+            border-radius: 28px;
+            min-width: 85px;
+        }
+
+        .player-name {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .player-stack {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #facc15;
+        }
+
+        .player-action-tag {
+            font-size: 0.6rem;
+            font-weight: 600;
+            margin-top: 2px;
+            background: rgba(0,0,0,0.5);
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 12px;
+        }
+
+        .player-cards {
+            display: flex;
+            gap: 3px;
+            margin-top: 2px;
+        }
+
+        .player-cards .card {
+            width: 32px;
+            height: 44px;
+            font-size: 0.7rem;
+        }
+
+        /* Dealer button 3D */
+        .dealer-btn {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffdd77, #e6b422);
+            color: #2c1e12;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 2px #aa8c3a, 0 4px 8px black;
+            z-index: 5;
+        }
+
+        /* Action panel glassmorphic */
+        .action-panel {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(8, 12, 28, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 12px 24px;
+            border-radius: 60px;
+            border: 1px solid rgba(250,204,21,0.25);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 20;
+        }
+
+        .action-btn {
+            padding: 8px 22px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 800;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-btn.fold { background: rgba(100,100,120,0.3); color: #ccc; }
+        .action-btn.fold:hover { background: rgba(150,70,70,0.5); color: #ffaaaa; }
+        .action-btn.check { background: rgba(34,197,94,0.2); color: #6ee7b7; border: 1px solid rgba(34,197,94,0.4);}
+        .action-btn.call { background: rgba(59,130,246,0.25); color: #93c5fd; border: 1px solid rgba(59,130,246,0.5);}
+        .action-btn.raise { background: linear-gradient(95deg, #eab308, #f97316); color: #0c0a1a; font-weight: 800;}
+        .action-btn.allin { background: linear-gradient(95deg, #b91c1c, #ef4444); color: white; box-shadow: 0 2px 8px rgba(220,38,38,0.4);}
+
+        .raise-slider {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.4);
+            padding: 0 10px;
+            border-radius: 30px;
+        }
+        .raise-slider input { width: 110px; accent-color: #facc15; }
+        .raise-amount { font-weight: 700; color: #facc15; min-width: 70px; }
+
+        .raise-presets button {
+            background: rgba(250,204,21,0.15);
+            border: 1px solid #facc1550;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Right panel modern */
+        .right-panel {
+            width: 280px;
+            background: rgba(12, 16, 28, 0.85);
+            backdrop-filter: blur(16px);
+            border-left: 1px solid rgba(250,204,21,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rp-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(250,204,21,0.2);
+        }
+        .rp-tab {
+            flex:1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #a0aec0;
+        }
+        .rp-tab.active {
+            color: #facc15;
+            border-bottom: 2px solid #facc15;
+        }
+
+        .hand-info {
+            padding: 14px;
+            border-bottom: 1px solid rgba(250,204,21,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+        .hand-label { font-size: 0.65rem; color: #facc15aa; text-transform: uppercase; letter-spacing: 1px; }
+        .hand-value { font-size: 1rem; font-weight: 800; color: #facc15; margin-top: 5px; }
+
+        .chat-area {
+            flex:1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .chat-msg {
+            font-size: 0.7rem;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .chat-msg .sender { color: #facc15; font-weight: 700; }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid rgba(250,204,21,0.1);
+        }
+        .chat-input input {
+            flex:1;
+            background: #1e243b;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 40px;
+            color: white;
+            font-size: 0.7rem;
+        }
+
+        .statusbar {
+            height: 22px;
+            background: rgba(0,0,0,0.6);
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 16px;
+        }
+        i, .fas { margin-right: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <span class="logo"><i class="fas fa-crown"></i> OMNIBUS POKER</span>
+    <div class="room-info"><i class="fas fa-table"></i> Table: <b>VORTEX</b> | Blinds: 10/20</div>
+    <div class="bal"><i class="fas fa-coins"></i> <span id="heroStackDisplay">4,821</span> EUR</div>
+    <button class="leave-btn"><i class="fas fa-sign-out-alt"></i> Leave</button>
+</div>
+
+<div class="main">
+    <div class="table-area">
+        <div class="poker-table" id="pokerTable">
+            <!-- dynamic players will be injected by JS, but static elements: pot, community cards -->
+            <div class="pot-display" id="potDisplay">POT: 340 EUR</div>
+            <div class="community-cards" id="communityCards">
+                <div class="card face-up">A<br>♠</div>
+                <div class="card face-up red">K<br>♥</div>
+                <div class="card face-up">7<br>♣</div>
+                <div class="card face-down"></div>
+                <div class="card face-down"></div>
+            </div>
+            <div class="dealer-btn" id="dealerButton" style="bottom: 90px; left: 44%;">D</div>
+            <!-- seats container -->
+            <div id="seatsContainer"></div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="action-panel" id="actionPanel">
+            <button class="action-btn fold" id="foldBtn"><i class="fas fa-times-circle"></i> Fold</button>
+            <button class="action-btn check" id="checkBtn"><i class="fas fa-check-circle"></i> Check</button>
+            <button class="action-btn call" id="callBtn"><i class="fas fa-phone-alt"></i> Call <span id="callAmountSpan">120</span></button>
+            <div class="raise-slider">
+                <input type="range" id="raiseSlider" min="120" max="4821" step="10" value="500">
+                <span class="raise-amount" id="raiseAmountLabel">500 EUR</span>
+            </div>
+            <button class="action-btn raise" id="raiseBtn"><i class="fas fa-arrow-up"></i> Raise</button>
+            <button class="action-btn allin" id="allinBtn"><i class="fas fa-skull"></i> All-In</button>
+            <div class="raise-presets">
+                <button data-preset="0.5">½ Pot</button>
+                <button data-preset="0.75">¾ Pot</button>
+                <button data-preset="1">Pot</button>
+                <button data-preset="2">2× Pot</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="rp-tabs">
+            <div class="rp-tab active"><i class="fas fa-comment-dots"></i> Chat</div>
+            <div class="rp-tab"><i class="fas fa-chart-line"></i> Stats</div>
+        </div>
+        <div class="hand-info">
+            <div class="hand-label"><i class="fas fa-hand-holding-heart"></i> Your Hand</div>
+            <div class="hand-value" id="yourHandRank">♠️ Aces | Top Pair</div>
+            <div style="font-size:0.6rem; margin-top:6px;">Hand #1247 · Flop · Hero turn</div>
+        </div>
+        <div class="chat-area" id="chatArea">
+            <div class="chat-msg system"><i class="fas fa-microphone-alt"></i> Satoshi99 raises to 120</div>
+            <div class="chat-msg system">Miner_X moves ALL-IN 7,600!</div>
+            <div class="chat-msg"><span class="sender">CryptoKing:</span> <span class="text">gl bro</span></div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Type message...">
+        </div>
+    </div>
+</div>
+<div class="statusbar">
+    <span><i class="fas fa-dice-d6"></i> Texas Hold'em · High stakes</span> <span>|</span> <span>Round: Flop</span>
+    <span style="flex:1"></span><span><i class="fas fa-shield-alt"></i> Provably Fair</span>
+</div>
+
+<script>
+    // MODERN POKER SIMULATION - DYNAMIC AVATARS & INTERACTIVE
+    const playersData = [
+        { id:0, name:"YOU", stack:4821, folded:false, isHero:true, avatarInitial:"🔥", avatarGrad:"linear-gradient(145deg, #c49a2b, #b86f0c)", bet:0, holeCards:["A♠","A♥"], visibleCards:true },
+        { id:1, name:"CryptoKing", stack:2150, folded:false, avatarInitial:"CK", avatarGrad:"linear-gradient(145deg, #0f4c5c, #0a2f3a)", bet:40, actionLabel:"Call 40" },
+        { id:2, name:"BitWhale", stack:890, folded:true, avatarInitial:"BW", avatarGrad:"linear-gradient(145deg, #4b2e2e, #2a1a1a)", folded:true },
+        { id:3, name:"Satoshi99", stack:5400, folded:false, avatarInitial:"S99", avatarGrad:"linear-gradient(145deg, #2b5e3b, #1a3a25)", bet:120, actionLabel:"Raise 120" },
+        { id:4, name:"AI_Bot_v3", stack:3200, folded:false, avatarInitial:"AI", avatarGrad:"linear-gradient(145deg, #2a4858, #1d3340)", actionLabel:"Check" },
+        { id:5, name:"LcxQueen", stack:1800, folded:true, avatarInitial:"LQ", avatarGrad:"linear-gradient(145deg, #734b6d, #4a2e46)", folded:true },
+        { id:6, name:"Miner_X", stack:7600, folded:false, avatarInitial:"MX", avatarGrad:"linear-gradient(145deg, #aa6f20, #7a4d12)", bet:7600, actionLabel:"ALL IN!" },
+        { id:7, name:"Empty", stack:0, folded:true, empty:true, avatarInitial:"+", avatarGrad:"#2a2e3a", emptySeat:true },
+        { id:8, name:"Empty", stack:0, folded:true, empty:true, avatarInitial:"+", avatarGrad:"#2a2e3a", emptySeat:true }
+    ];
+    let gamePot = 340;
+    let currentCallAmount = 7600;   // because Miner_X all-in 7600
+    let hero = playersData[0];
+    let activeTurn = true; // hero's turn
+    let chatMessages = [];
+
+    function addChatMessage(sender, text, isSystem = false) {
+        const chatDiv = document.getElementById('chatArea');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${isSystem ? 'system' : ''}`;
+        if(isSystem) msgDiv.innerHTML = `<i class="fas fa-bell"></i> ${text}`;
+        else msgDiv.innerHTML = `<span class="sender">${sender}:</span> <span class="text">${text}</span>`;
+        chatDiv.appendChild(msgDiv);
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+        if(chatMessages.length > 30) chatDiv.removeChild(chatDiv.firstChild);
+    }
+
+    function updateUI() {
+        document.getElementById('potDisplay').innerHTML = `POT: ${gamePot} EUR`;
+        document.getElementById('heroStackDisplay').innerText = hero.stack;
+        const callSpan = document.getElementById('callAmountSpan');
+        if(callSpan) callSpan.innerText = currentCallAmount;
+        const slider = document.getElementById('raiseSlider');
+        if(slider) {
+            slider.min = currentCallAmount;
+            slider.max = hero.stack;
+            if(parseInt(slider.value) < currentCallAmount) slider.value = Math.min(currentCallAmount, hero.stack);
+            document.getElementById('raiseAmountLabel').innerText = parseInt(slider.value) + " EUR";
+        }
+        // render seats dynamically
+        renderSeats();
+        // update hand rank text
+        if(!hero.folded) document.getElementById('yourHandRank').innerHTML = "♠️ Pocket Aces · Monster";
+        else document.getElementById('yourHandRank').innerHTML = "❌ Folded";
+    }
+
+    function renderSeats() {
+        const container = document.getElementById('seatsContainer');
+        if(!container) return;
+        container.innerHTML = '';
+        const seatPositions = [
+            "bottom: -12px; left: 50%; transform: translateX(-50%);", // hero
+            "bottom: 25px; left: 6%;", "top: 38%; left: -4%; transform: translateY(-50%);",
+            "top: -6px; left: 14%;", "top: -18px; left: 50%; transform: translateX(-50%);",
+            "top: -6px; right: 14%;", "top: 38%; right: -4%; transform: translateY(-50%);",
+            "bottom: 25px; right: 6%;", "bottom: -12px; right: 24%;"
+        ];
+        playersData.forEach((p, idx) => {
+            if(p.emptySeat) {
+                const seatDiv = document.createElement('div');
+                seatDiv.className = 'player-seat';
+                seatDiv.style = seatPositions[idx];
+                seatDiv.innerHTML = `
+                    <div class="player-avatar" style="background: #232835; border: 1px dashed #facc1540;"><span style="opacity:0.5;">+</span></div>
+                    <div class="player-info"><div class="player-name" style="color:#aaa">Empty seat</div></div>
+                `;
+                container.appendChild(seatDiv);
+                return;
+            }
+            const foldedClass = p.folded ? 'folded-avatar' : '';
+            const activeClass = (activeTurn && p.isHero && !p.folded) ? 'active-turn' : '';
+            const actionHtml = p.actionLabel ? `<div class="player-action-tag">${p.actionLabel}</div>` : '';
+            const cardsHtml = p.isHero && !p.folded ? 
+                `<div class="player-cards"><div class="card face-up" style="width:32px;height:44px;">${hero.holeCards[0]}</div><div class="card face-up red" style="width:32px;height:44px;">${hero.holeCards[1]}</div></div>` :
+                (!p.folded && !p.emptySeat ? `<div class="player-cards"><div class="card face-down" style="width:28px;height:40px;"></div><div class="card face-down" style="width:28px;height:40px;"></div></div>` : '');
+            
+            const stackColor = p.stack ? p.stack.toLocaleString() : '0';
+            const seatDiv = document.createElement('div');
+            seatDiv.className = 'player-seat';
+            seatDiv.style = seatPositions[idx];
+            seatDiv.innerHTML = `
+                <div class="player-avatar ${foldedClass} ${activeClass}" style="background: ${p.avatarGrad}; color: white; font-size: 1.2rem; font-weight:bold;">${p.avatarInitial}</div>
+                <div class="player-info">
+                    <div class="player-name" style="${p.folded ? 'opacity:0.6' : ''}">${p.name}</div>
+                    <div class="player-stack"><i class="fas fa-chips"></i> ${!p.emptySeat ? stackColor : '---'} EUR</div>
+                    ${actionHtml}
+                </div>
+                ${cardsHtml}
+            `;
+            container.appendChild(seatDiv);
+        });
+    }
+
+    function resolveAction(action, raiseValue = null) {
+        if(!activeTurn || hero.folded) {
+            addChatMessage("System", "Action not available (folded or not your turn)", true);
+            return false;
+        }
+        if(action === 'fold') {
+            hero.folded = true;
+            addChatMessage("YOU", "folds the hand", false);
+            addChatMessage("System", "You folded. Hand over.", true);
+            activeTurn = false;
+            updateUI();
+            return true;
+        }
+        if(action === 'check') {
+            if(currentCallAmount > 0) {
+                addChatMessage("System", "Cannot check, there's a bet to call.", true);
+                return false;
+            }
+            addChatMessage("YOU", "checks", false);
+            activeTurn = false;
+            updateUI();
+            return true;
+        }
+        if(action === 'call') {
+            let callValue = currentCallAmount;
+            if(hero.stack < callValue) callValue = hero.stack;
+            if(callValue <= 0) {
+                addChatMessage("System", "No bet to call.", true);
+                return false;
+            }
+            hero.stack -= callValue;
+            gamePot += callValue;
+            addChatMessage("YOU", `calls ${callValue} EUR`, false);
+            if(hero.stack === 0) addChatMessage("System", "YOU are ALL IN!", true);
+            activeTurn = false;
+            updateUI();
+            return true;
+        }
+        if(action === 'raise' && raiseValue) {
+            let raiseAmount = Math.min(raiseValue, hero.stack);
+            if(raiseAmount < currentCallAmount) raiseAmount = currentCallAmount;
+            if(raiseAmount > hero.stack) raiseAmount = hero.stack;
+            if(raiseAmount <= 0) return false;
+            hero.stack -= raiseAmount;
+            gamePot += raiseAmount;
+            currentCallAmount = raiseAmount;
+            addChatMessage("YOU", `raises to ${raiseAmount} EUR`, false);
+            if(hero.stack === 0) addChatMessage("System", "YOU are ALL IN!", true);
+            activeTurn = false;
+            updateUI();
+            return true;
+        }
+        if(action === 'allin') {
+            let allinAmount = hero.stack;
+            if(allinAmount <= 0) return false;
+            hero.stack = 0;
+            gamePot += allinAmount;
+            if(allinAmount > currentCallAmount) currentCallAmount = allinAmount;
+            addChatMessage("YOU", `goes ALL-IN with ${allinAmount} EUR!`, false);
+            activeTurn = false;
+            updateUI();
+            return true;
+        }
+        return false;
+    }
+
+    // Event listeners
+    document.getElementById('foldBtn').addEventListener('click', () => resolveAction('fold'));
+    document.getElementById('checkBtn').addEventListener('click', () => resolveAction('check'));
+    document.getElementById('callBtn').addEventListener('click', () => resolveAction('call'));
+    document.getElementById('raiseBtn').addEventListener('click', () => {
+        let raiseVal = parseInt(document.getElementById('raiseSlider').value);
+        resolveAction('raise', raiseVal);
+    });
+    document.getElementById('allinBtn').addEventListener('click', () => resolveAction('allin'));
+    const slider = document.getElementById('raiseSlider');
+    slider.addEventListener('input', (e) => {
+        document.getElementById('raiseAmountLabel').innerText = e.target.value + " EUR";
+    });
+    // presets
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            let pot = gamePot;
+            let mult = parseFloat(btn.getAttribute('data-preset'));
+            let presetRaise = Math.floor(pot * mult);
+            let minRaise = currentCallAmount;
+            presetRaise = Math.max(presetRaise, minRaise);
+            presetRaise = Math.min(presetRaise, hero.stack);
+            if(presetRaise < minRaise) presetRaise = minRaise;
+            document.getElementById('raiseSlider').value = presetRaise;
+            document.getElementById('raiseAmountLabel').innerText = presetRaise + " EUR";
+        });
+    });
+    // chat input
+    document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') {
+            let msg = e.target.value.trim();
+            if(msg) {
+                addChatMessage("YOU", msg, false);
+                e.target.value = '';
+            }
+        }
+    });
+    // update call amount after raise changes from state
+    function initGame() {
+        renderSeats();
+        updateUI();
+        addChatMessage("System", "🎴 Your turn — All-in 7,600 from Miner_X! Call, raise or fold.", true);
+    }
+    initGame();
+</script>
+</body>
+</html>

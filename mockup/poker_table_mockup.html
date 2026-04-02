@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OmniBus Casino — Poker Table Live</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0e14; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; font-size: 12px; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+/* TOP BAR */
+.topbar { height: 40px; background: rgba(14,22,40,0.95); border-bottom: 1px solid rgba(250,204,21,0.2); display: flex; align-items: center; padding: 0 12px; gap: 10px; }
+.topbar .logo { color: #facc15; font-weight: 800; font-size: 14px; }
+.topbar .room-info { color: rgba(255,255,255,0.5); font-size: 10px; }
+.topbar .room-info b { color: #facc15; }
+.topbar .sep { width: 1px; height: 20px; background: rgba(250,204,21,0.15); }
+.topbar .bal { color: #facc15; font-weight: 700; font-size: 12px; }
+.topbar .leave-btn { margin-left: auto; background: rgba(235,4,4,0.2); border: 1px solid rgba(235,4,4,0.3); color: #eb0404; padding: 4px 16px; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; }
+
+/* MAIN AREA */
+.main { flex: 1; display: flex; overflow: hidden; }
+
+/* TABLE AREA */
+.table-area { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #0d1a0d 0%, #0a0e14 70%); }
+
+/* FELT TABLE */
+.poker-table {
+    width: 700px; height: 380px; position: relative;
+    background: radial-gradient(ellipse, #1a4a1a 0%, #0f2f0f 60%, #0a200a 100%);
+    border-radius: 200px; border: 8px solid #2a1a0a;
+    box-shadow: 0 0 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3), 0 0 100px rgba(26,74,26,0.15);
+}
+.poker-table::before {
+    content: ''; position: absolute; inset: 12px; border-radius: 190px;
+    border: 2px solid rgba(250,204,21,0.15);
+}
+
+/* COMMUNITY CARDS */
+.community-cards {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: flex; gap: 6px;
+}
+.card {
+    width: 48px; height: 68px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; line-height: 1.2; text-align: center;
+}
+.card.face-up {
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    border: 1px solid #ccc; color: #000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.card.face-up.red { color: #cc0000; }
+.card.face-down {
+    background: linear-gradient(135deg, #1a3a8a, #0a2060);
+    border: 1px solid #2a4a9a;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.card.face-down::after { content: '🂠'; font-size: 20px; }
+
+/* POT */
+.pot-display {
+    position: absolute; top: 38%; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.5); padding: 4px 14px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; color: #facc15;
+    border: 1px solid rgba(250,204,21,0.3);
+}
+
+/* PLAYER SEATS */
+.player-seat {
+    position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.player-avatar {
+    width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; border: 3px solid rgba(250,204,21,0.3);
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
+.player-avatar.active { border-color: #facc15; box-shadow: 0 0 20px rgba(250,204,21,0.4); }
+.player-avatar.folded { opacity: 0.4; border-color: #333; }
+.player-avatar.empty { background: rgba(255,255,255,0.05); border: 2px dashed rgba(255,255,255,0.1); font-size: 14px; }
+
+.player-info { text-align: center; }
+.player-name { font-size: 10px; font-weight: 700; color: #e0e0e0; }
+.player-stack { font-size: 9px; color: #facc15; font-weight: 600; }
+.player-action { font-size: 8px; padding: 1px 6px; border-radius: 3px; margin-top: 2px; }
+.player-action.call { background: rgba(59,130,246,0.2); color: #3b82f6; }
+.player-action.raise { background: rgba(250,204,21,0.2); color: #facc15; }
+.player-action.fold { background: rgba(128,128,128,0.2); color: #888; }
+.player-action.allin { background: rgba(235,4,4,0.2); color: #eb0404; }
+.player-action.check { background: rgba(16,235,4,0.2); color: #10eb04; }
+
+.player-cards { display: flex; gap: 3px; margin-top: 2px; }
+.player-cards .card { width: 32px; height: 44px; font-size: 10px; }
+
+/* DEALER BUTTON */
+.dealer-btn {
+    position: absolute; width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #fff, #ddd); color: #000;
+    font-size: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    border: 2px solid #facc15; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* BET CHIPS (in front of players) */
+.player-bet {
+    position: absolute; font-size: 9px; color: #facc15; font-weight: 700;
+    background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 8px;
+}
+
+/* SEAT POSITIONS (9 players around oval table) */
+.seat-0 { bottom: -20px; left: 50%; transform: translateX(-50%); }  /* Hero (bottom center) */
+.seat-1 { bottom: 20px; left: 8%; }
+.seat-2 { top: 40%; left: -5%; transform: translateY(-50%); }
+.seat-3 { top: -10px; left: 15%; }
+.seat-4 { top: -20px; left: 50%; transform: translateX(-50%); }
+.seat-5 { top: -10px; right: 15%; }
+.seat-6 { top: 40%; right: -5%; transform: translateY(-50%); }
+.seat-7 { bottom: 20px; right: 8%; }
+.seat-8 { bottom: -20px; right: 25%; }
+
+/* ACTION PANEL (bottom) */
+.action-panel {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center;
+    background: rgba(0,0,0,0.7); padding: 10px 16px; border-radius: 12px;
+    border: 1px solid rgba(250,204,21,0.2);
+}
+.action-btn {
+    padding: 10px 24px; border: none; border-radius: 6px; font-size: 12px; font-weight: 700;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.action-btn.fold { background: rgba(128,128,128,0.3); color: #aaa; }
+.action-btn.fold:hover { background: rgba(128,128,128,0.5); }
+.action-btn.check { background: rgba(16,235,4,0.2); color: #10eb04; border: 1px solid rgba(16,235,4,0.3); }
+.action-btn.check:hover { background: rgba(16,235,4,0.3); }
+.action-btn.call { background: rgba(59,130,246,0.3); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
+.action-btn.call:hover { background: rgba(59,130,246,0.4); }
+.action-btn.raise { background: linear-gradient(135deg, #facc15, #f59e0b); color: #0a0e14; }
+.action-btn.raise:hover { box-shadow: 0 0 16px rgba(250,204,21,0.4); }
+.action-btn.allin { background: linear-gradient(135deg, #eb0404, #cc0000); color: #fff; }
+
+.raise-slider { display: flex; align-items: center; gap: 6px; }
+.raise-slider input[type="range"] { width: 120px; accent-color: #facc15; }
+.raise-slider .raise-amount { color: #facc15; font-weight: 700; font-size: 12px; min-width: 60px; text-align: center; }
+.raise-presets { display: flex; gap: 4px; }
+.raise-presets button {
+    padding: 4px 8px; font-size: 8px; font-weight: 700; border-radius: 3px; cursor: pointer;
+    background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.2); color: #facc15;
+}
+
+/* RIGHT PANEL: Chat + Table Info */
+.right-panel { width: 240px; background: rgba(10,16,28,0.95); border-left: 1px solid rgba(250,204,21,0.1); display: flex; flex-direction: column; }
+.rp-tabs { display: flex; border-bottom: 1px solid rgba(250,204,21,0.1); }
+.rp-tab { flex: 1; text-align: center; padding: 6px; font-size: 9px; color: #555; cursor: pointer; }
+.rp-tab.active { color: #facc15; border-bottom: 1px solid #facc15; }
+.chat-area { flex: 1; padding: 8px; overflow-y: auto; }
+.chat-msg { padding: 3px 0; font-size: 10px; border-bottom: 1px solid rgba(250,204,21,0.05); }
+.chat-msg .sender { color: #facc15; font-weight: 700; }
+.chat-msg .text { color: rgba(255,255,255,0.7); }
+.chat-msg.system { color: rgba(16,235,4,0.6); font-style: italic; }
+.chat-input { display: flex; padding: 6px; border-top: 1px solid rgba(250,204,21,0.1); }
+.chat-input input { flex: 1; background: rgba(26,31,46,0.8); border: 1px solid rgba(250,204,21,0.2); color: #e0e0e0; padding: 5px 8px; font-size: 10px; border-radius: 4px; }
+
+/* Hand info panel */
+.hand-info { padding: 8px; border-top: 1px solid rgba(250,204,21,0.1); }
+.hand-label { font-size: 9px; color: rgba(250,204,21,0.4); font-weight: 700; text-transform: uppercase; }
+.hand-value { font-size: 12px; color: #10eb04; font-weight: 700; margin-top: 2px; }
+
+/* STATUS BAR */
+.statusbar { height: 22px; background: rgba(8,12,24,0.95); border-top: 1px solid rgba(250,204,21,0.15); display: flex; align-items: center; padding: 0 12px; gap: 14px; font-size: 9px; color: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+    <span class="logo">🃏 POKER LIVE</span>
+    <div class="sep"></div>
+    <span class="room-info">Table: <b>High Rollers #1</b> | Blinds: <b>10/20 EUR</b> | Players: <b>6/9</b></span>
+    <div class="sep"></div>
+    <span class="bal">💰 4,821.50 EUR</span>
+    <button class="leave-btn">✕ Leave Table</button>
+</div>
+
+<div class="main">
+
+<!-- TABLE AREA -->
+<div class="table-area">
+    <div class="poker-table">
+
+        <!-- POT -->
+        <div class="pot-display">POT: 340 EUR</div>
+
+        <!-- COMMUNITY CARDS -->
+        <div class="community-cards">
+            <div class="card face-up">A<br>♠</div>
+            <div class="card face-up red">K<br>♥</div>
+            <div class="card face-up">7<br>♣</div>
+            <div class="card face-down"></div>
+            <div class="card face-down"></div>
+        </div>
+
+        <!-- DEALER BUTTON -->
+        <div class="dealer-btn" style="bottom: 85px; left: 42%;">D</div>
+
+        <!-- PLAYER SEATS -->
+        <!-- Seat 0: HERO (you, bottom center) -->
+        <div class="player-seat seat-0">
+            <div class="player-cards">
+                <div class="card face-up" style="width:36px;height:50px;font-size:11px;">A<br>♠</div>
+                <div class="card face-up red" style="width:36px;height:50px;font-size:11px;">A<br>♥</div>
+            </div>
+            <div class="player-avatar active" style="background: linear-gradient(135deg, #1a3a1a, #0f2f0f);">😎</div>
+            <div class="player-info">
+                <div class="player-name" style="color:#facc15">YOU</div>
+                <div class="player-stack">4,821 EUR</div>
+            </div>
+        </div>
+
+        <!-- Seat 1 -->
+        <div class="player-seat seat-1">
+            <div class="player-avatar" style="background: rgba(26,31,46,0.8);">🤠</div>
+            <div class="player-info">
+                <div class="player-name">CryptoKing</div>
+                <div class="player-stack">2,150 EUR</div>
+                <div class="player-action call">Call 40</div>
+            </div>
+            <div class="player-cards"><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div></div>
+        </div>
+
+        <!-- Seat 2 -->
+        <div class="player-seat seat-2">
+            <div class="player-avatar folded" style="background: rgba(26,31,46,0.8);">👨‍💼</div>
+            <div class="player-info">
+                <div class="player-name" style="opacity:0.4">BitWhale</div>
+                <div class="player-stack" style="opacity:0.4">890 EUR</div>
+                <div class="player-action fold">Fold</div>
+            </div>
+        </div>
+
+        <!-- Seat 3 -->
+        <div class="player-seat seat-3">
+            <div class="player-avatar" style="background: rgba(26,31,46,0.8);">🎩</div>
+            <div class="player-info">
+                <div class="player-name">Satoshi99</div>
+                <div class="player-stack">5,400 EUR</div>
+                <div class="player-action raise">Raise 120</div>
+            </div>
+            <div class="player-cards"><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div></div>
+        </div>
+
+        <!-- Seat 4 (top center) -->
+        <div class="player-seat seat-4">
+            <div class="player-avatar" style="background: rgba(26,31,46,0.8);">🤖</div>
+            <div class="player-info">
+                <div class="player-name">AI_Bot_v3</div>
+                <div class="player-stack">3,200 EUR</div>
+                <div class="player-action check">Check</div>
+            </div>
+            <div class="player-cards"><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div></div>
+        </div>
+
+        <!-- Seat 5 -->
+        <div class="player-seat seat-5">
+            <div class="player-avatar folded" style="background: rgba(26,31,46,0.8);">👩</div>
+            <div class="player-info">
+                <div class="player-name" style="opacity:0.4">LcxQueen</div>
+                <div class="player-stack" style="opacity:0.4">1,800 EUR</div>
+                <div class="player-action fold">Fold</div>
+            </div>
+        </div>
+
+        <!-- Seat 6 -->
+        <div class="player-seat seat-6">
+            <div class="player-avatar" style="background: rgba(26,31,46,0.8);">🧔</div>
+            <div class="player-info">
+                <div class="player-name">Miner_X</div>
+                <div class="player-stack">7,600 EUR</div>
+                <div class="player-action allin">ALL IN!</div>
+            </div>
+            <div class="player-cards"><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div><div class="card face-down" style="width:24px;height:34px;font-size:8px;"></div></div>
+        </div>
+
+        <!-- Empty seats -->
+        <div class="player-seat seat-7">
+            <div class="player-avatar empty">+</div>
+            <div class="player-info"><div class="player-name" style="color:#555">Empty</div></div>
+        </div>
+        <div class="player-seat seat-8">
+            <div class="player-avatar empty">+</div>
+            <div class="player-info"><div class="player-name" style="color:#555">Empty</div></div>
+        </div>
+    </div>
+
+    <!-- ACTION PANEL -->
+    <div class="action-panel">
+        <button class="action-btn fold">Fold</button>
+        <button class="action-btn check">Check</button>
+        <button class="action-btn call">Call 120</button>
+        <div class="raise-slider">
+            <input type="range" min="240" max="4821" value="500">
+            <span class="raise-amount">500 EUR</span>
+        </div>
+        <button class="action-btn raise">Raise</button>
+        <button class="action-btn allin">All-In</button>
+        <div class="raise-presets">
+            <button>½ Pot</button>
+            <button>¾ Pot</button>
+            <button>Pot</button>
+            <button>2× Pot</button>
+        </div>
+    </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+    <div class="rp-tabs">
+        <div class="rp-tab active">💬 Chat</div>
+        <div class="rp-tab">📊 Stats</div>
+        <div class="rp-tab">📋 Hand</div>
+    </div>
+
+    <!-- Hand Info -->
+    <div class="hand-info">
+        <div class="hand-label">Your Hand</div>
+        <div class="hand-value">Pair of Aces</div>
+        <div style="font-size:9px; color:#888; margin-top:4px;">Hand #1247 · Flop</div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-area">
+        <div class="chat-msg system">Satoshi99 raises to 120</div>
+        <div class="chat-msg system">AI_Bot_v3 checks</div>
+        <div class="chat-msg"><span class="sender">CryptoKing:</span> <span class="text">nice hand!</span></div>
+        <div class="chat-msg system">Miner_X goes ALL IN! (7,600)</div>
+        <div class="chat-msg"><span class="sender">Satoshi99:</span> <span class="text">wow 😱</span></div>
+        <div class="chat-msg system">BitWhale folds</div>
+        <div class="chat-msg system">LcxQueen folds</div>
+        <div class="chat-msg"><span class="sender">YOU:</span> <span class="text">hmm...</span></div>
+    </div>
+    <div class="chat-input">
+        <input placeholder="Type message..." />
+    </div>
+</div>
+
+</div>
+
+<div class="statusbar">
+    <span>🃏 Texas Hold'em · Table #1 · 6/9 players</span>
+    <span>|</span>
+    <span>Hand #1247</span>
+    <span>|</span>
+    <span>Round: Flop</span>
+    <span style="flex:1"></span>
+    <span>🔐 Provably Fair · OmniBus Casino v0.1.0</span>
+</div>
+
+</body>
+</html>

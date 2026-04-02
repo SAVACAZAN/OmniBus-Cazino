@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OmniBus Casino — Layout Mockup</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f1419; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; font-size: 12px; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+.topbar { height: 42px; background: rgba(14,22,40,0.95); border-bottom: 1px solid rgba(250,204,21,0.2); display: flex; align-items: center; padding: 0 12px; gap: 10px; }
+.topbar .logo { color: #facc15; font-weight: 800; font-size: 15px; text-shadow: 0 0 10px rgba(250,204,21,0.3); }
+.topbar .sep { width: 1px; height: 22px; background: rgba(250,204,21,0.15); }
+.topbar .balance { display: flex; gap: 12px; }
+.topbar .bal-item { display: flex; align-items: center; gap: 4px; font-size: 10px; }
+.topbar .bal-item .coin { color: rgba(250,204,21,0.5); font-size: 9px; font-weight: 700; }
+.topbar .bal-item .amount { color: #facc15; font-weight: 700; }
+.topbar .wallet-btn { background: rgba(250,204,21,0.15); border: 1px solid rgba(250,204,21,0.3); color: #facc15; padding: 4px 12px; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; margin-left: auto; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+.sidebar { width: 54px; background: rgba(10,16,28,0.95); border-right: 1px solid rgba(250,204,21,0.1); display: flex; flex-direction: column; align-items: center; padding: 6px 0; gap: 2px; }
+.nav-item { width: 44px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; color: rgba(255,255,255,0.25); font-size: 7px; gap: 1px; transition: 0.2s; }
+.nav-item .icon { font-size: 16px; }
+.nav-item:hover { background: rgba(250,204,21,0.08); color: rgba(255,255,255,0.6); }
+.nav-item.active { background: rgba(250,204,21,0.12); color: #facc15; border: 1px solid rgba(250,204,21,0.25); }
+.nav-spacer { flex: 1; }
+
+.content { flex: 1; overflow: hidden; }
+.page { display: none; height: 100%; overflow-y: auto; padding: 16px; }
+.page.active { display: block; }
+
+/* LOBBY */
+.lobby-header { text-align: center; margin-bottom: 24px; }
+.lobby-header h1 { font-size: 28px; font-weight: 800; color: #facc15; text-shadow: 0 0 20px rgba(250,204,21,0.3); }
+.lobby-header p { color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px; }
+
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.game-card { background: rgba(20,25,30,0.8); border: 2px solid rgba(250,204,21,0.15); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s; text-align: center; }
+.game-card:hover { border-color: rgba(250,204,21,0.4); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(250,204,21,0.1); }
+.game-card .game-icon { font-size: 40px; margin-bottom: 8px; }
+.game-card .game-name { font-size: 14px; font-weight: 800; color: #facc15; margin-bottom: 4px; }
+.game-card .game-desc { font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.4; }
+.game-card .game-badge { display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 3px; font-size: 9px; font-weight: 700; }
+.game-card .game-badge.live { background: rgba(16,235,4,0.15); color: #10eb04; }
+.game-card .game-badge.fair { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.game-card .game-badge.hot { background: rgba(235,4,4,0.15); color: #eb0404; }
+
+/* GAME PAGE */
+.game-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px 16px; background: rgba(20,25,30,0.8); border: 1px solid rgba(250,204,21,0.2); border-radius: 8px; }
+.game-header .back-btn { background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.2); color: #facc15; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.game-header .title { font-size: 18px; font-weight: 800; color: #facc15; }
+
+.game-area { display: grid; grid-template-columns: 1fr 280px; gap: 12px; }
+.game-main { background: rgba(20,25,30,0.8); border: 2px solid rgba(250,204,21,0.15); border-radius: 8px; padding: 20px; min-height: 400px; display: flex; align-items: center; justify-content: center; }
+.game-main .placeholder { color: rgba(250,204,21,0.2); font-size: 24px; font-weight: 700; }
+
+.game-sidebar { display: flex; flex-direction: column; gap: 12px; }
+.bet-panel { background: rgba(20,25,30,0.8); border: 1px solid rgba(250,204,21,0.15); border-radius: 8px; padding: 16px; }
+.bet-panel .bet-title { font-size: 11px; color: rgba(250,204,21,0.6); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+.bet-panel input { width: 100%; background: rgba(26,31,46,0.8); border: 1px solid rgba(250,204,21,0.2); color: #facc15; padding: 8px; font-size: 12px; border-radius: 4px; font-weight: 700; text-align: center; }
+.bet-panel .bet-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+.bet-panel .preset-btn { background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.2); color: #facc15; padding: 4px; font-size: 9px; font-weight: 700; border-radius: 3px; cursor: pointer; }
+.bet-btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 12px; text-transform: uppercase; }
+.bet-btn.play { background: linear-gradient(135deg, #facc15, #f59e0b); color: #0f1419; }
+.bet-btn.green { background: linear-gradient(135deg, #10eb04, #0cc800); color: #0f1419; }
+.bet-btn.red { background: linear-gradient(135deg, #eb0404, #cc0000); color: #fff; }
+
+.history-panel { background: rgba(20,25,30,0.8); border: 1px solid rgba(250,204,21,0.15); border-radius: 8px; padding: 12px; flex: 1; }
+.history-panel .hist-title { font-size: 10px; color: rgba(250,204,21,0.5); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+.hist-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 10px; border-bottom: 1px solid rgba(250,204,21,0.05); }
+.hist-row .win { color: #10eb04; } .hist-row .loss { color: #eb0404; }
+
+.statusbar { height: 24px; background: rgba(8,12,24,0.95); border-top: 1px solid rgba(250,204,21,0.15); display: flex; align-items: center; padding: 0 12px; gap: 14px; font-size: 9px; color: rgba(255,255,255,0.3); }
+.statusbar .pf { color: #3b82f6; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <span class="logo">🎰 OMNIBUS CASINO</span>
+    <div class="sep"></div>
+    <div class="balance">
+        <div class="bal-item"><span class="coin">EUR</span><span class="amount">4,821.50</span></div>
+        <div class="bal-item"><span class="coin">BTC</span><span class="amount">0.0142</span></div>
+        <div class="bal-item"><span class="coin">ETH</span><span class="amount">0.85</span></div>
+        <div class="bal-item"><span class="coin">LCX</span><span class="amount">125,400</span></div>
+    </div>
+    <div class="sep"></div>
+    <button class="wallet-btn" onclick="alert('Import OmniBus SuperVault Wallet')">🔐 Wallet</button>
+</div>
+
+<div class="main">
+<div class="sidebar">
+    <div class="nav-item active" onclick="showPage('lobby')"><span class="icon">🏠</span><span>Lobby</span></div>
+    <div class="nav-item" onclick="showPage('poker')"><span class="icon">🃏</span><span>Poker</span></div>
+    <div class="nav-item" onclick="showPage('dice')"><span class="icon">🎲</span><span>Dice</span></div>
+    <div class="nav-item" onclick="showPage('blackjack')"><span class="icon">🃏</span><span>BJ</span></div>
+    <div class="nav-item" onclick="showPage('slots')"><span class="icon">🎰</span><span>Slots</span></div>
+    <div class="nav-item" onclick="showPage('sports')"><span class="icon">⚽</span><span>Sports</span></div>
+    <div class="nav-item" onclick="showPage('crash')"><span class="icon">🎯</span><span>Crash</span></div>
+    <div class="nav-item" onclick="showPage('coinflip')"><span class="icon">🪙</span><span>Flip</span></div>
+    <div class="nav-item" onclick="showPage('binary')"><span class="icon">📊</span><span>Binary</span></div>
+    <div class="nav-item" onclick="showPage('auction')"><span class="icon">🏆</span><span>Auction</span></div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item"><span class="icon">⚙</span><span>Cfg</span></div>
+</div>
+
+<div class="content">
+
+<!-- LOBBY -->
+<div class="page active" id="page-lobby">
+    <div class="lobby-header">
+        <h1>🎰 OmniBus Casino</h1>
+        <p>Provably Fair · Multi-Currency · Powered by OmniBus Ecosystem</p>
+    </div>
+    <div class="games-grid">
+        <div class="game-card" onclick="showPage('poker')">
+            <div class="game-icon">🃏</div>
+            <div class="game-name">Texas Hold'em</div>
+            <div class="game-desc">Multiplayer poker cu blinds, all-in, side pots. AI sau players reali.</div>
+            <span class="game-badge live">MULTIPLAYER</span>
+        </div>
+        <div class="game-card" onclick="showPage('dice')">
+            <div class="game-icon">🎲</div>
+            <div class="game-name">Dice</div>
+            <div class="game-desc">Over/Under target. Provably fair. House edge 1%.</div>
+            <span class="game-badge fair">PROVABLY FAIR</span>
+        </div>
+        <div class="game-card" onclick="showPage('blackjack')">
+            <div class="game-icon">🃏</div>
+            <div class="game-name">Blackjack</div>
+            <div class="game-desc">Classic 21. Hit, Stand, Double, Split. Dealer stands on soft 17.</div>
+            <span class="game-badge fair">CLASSIC</span>
+        </div>
+        <div class="game-card" onclick="showPage('slots')">
+            <div class="game-icon">🎰</div>
+            <div class="game-name">Crypto Slots</div>
+            <div class="game-desc">5 reels, 20 paylines. BTC/ETH/LCX symbols. Free spins + jackpot.</div>
+            <span class="game-badge hot">JACKPOT</span>
+        </div>
+        <div class="game-card" onclick="showPage('sports')">
+            <div class="game-icon">⚽</div>
+            <div class="game-name">Sports Betting</div>
+            <div class="game-desc">Fotbal, tenis, baschet. Live odds, parlay, accumulator.</div>
+            <span class="game-badge live">LIVE</span>
+        </div>
+        <div class="game-card">
+            <div class="game-icon">🏇</div>
+            <div class="game-name">Race Betting</div>
+            <div class="game-desc">Curse virtuale animate. Win, Place, Each-Way.</div>
+            <span class="game-badge live">ANIMATED</span>
+        </div>
+        <div class="game-card" onclick="showPage('crash')">
+            <div class="game-icon">🎯</div>
+            <div class="game-name">Crash</div>
+            <div class="game-desc">Multiplier creste — cash out inainte de crash!</div>
+            <span class="game-badge hot">SOCIAL</span>
+        </div>
+        <div class="game-card" onclick="showPage('coinflip')">
+            <div class="game-icon">🪙</div>
+            <div class="game-name">Coin Flip</div>
+            <div class="game-desc">50/50 Heads or Tails. Double or nothing. Streak bonuses.</div>
+            <span class="game-badge fair">INSTANT</span>
+        </div>
+        <div class="game-card" onclick="showPage('binary')">
+            <div class="game-icon">📊</div>
+            <div class="game-name">Binary Options</div>
+            <div class="game-desc">UP/DOWN pe preturi reale. 30s-15m. 85% payout.</div>
+            <span class="game-badge live">REAL PRICES</span>
+        </div>
+        <div class="game-card" onclick="showPage('auction')">
+            <div class="game-icon">🏆</div>
+            <div class="game-name">Auction</div>
+            <div class="game-desc">Licitatie live pe NFT si items. Bid wars cu countdown.</div>
+            <span class="game-badge hot">SOCIAL</span>
+        </div>
+    </div>
+</div>
+
+<!-- DICE GAME (example page) -->
+<div class="page" id="page-dice">
+    <div class="game-header">
+        <button class="back-btn" onclick="showPage('lobby')">← Lobby</button>
+        <span class="title">🎲 Dice — Provably Fair</span>
+    </div>
+    <div class="game-area">
+        <div class="game-main">
+            <div style="text-align:center; width:100%;">
+                <div style="font-size:60px; margin-bottom:20px;">🎲</div>
+                <div style="font-size:48px; font-weight:800; color:#facc15; margin-bottom:10px;">--</div>
+                <div style="color:rgba(255,255,255,0.4); font-size:11px;">Roll to see result</div>
+                <div style="margin-top:20px; display:flex; justify-content:center; gap:16px;">
+                    <div style="text-align:center"><div style="color:rgba(250,204,21,0.5); font-size:9px;">TARGET</div><div style="color:#facc15; font-size:18px; font-weight:800;">50.00</div></div>
+                    <div style="text-align:center"><div style="color:rgba(250,204,21,0.5); font-size:9px;">MULTIPLIER</div><div style="color:#10eb04; font-size:18px; font-weight:800;">1.98x</div></div>
+                    <div style="text-align:center"><div style="color:rgba(250,204,21,0.5); font-size:9px;">WIN CHANCE</div><div style="color:#3b82f6; font-size:18px; font-weight:800;">49.5%</div></div>
+                </div>
+                <div style="margin-top:16px; display:flex; justify-content:center; gap:8px;">
+                    <button style="background:rgba(16,235,4,0.2); color:#10eb04; border:1px solid rgba(16,235,4,0.3); padding:8px 24px; border-radius:4px; font-weight:700; cursor:pointer;">ROLL OVER</button>
+                    <button style="background:rgba(235,4,4,0.2); color:#eb0404; border:1px solid rgba(235,4,4,0.3); padding:8px 24px; border-radius:4px; font-weight:700; cursor:pointer;">ROLL UNDER</button>
+                </div>
+            </div>
+        </div>
+        <div class="game-sidebar">
+            <div class="bet-panel">
+                <div class="bet-title">💰 Bet Amount</div>
+                <input value="10.00" />
+                <div class="bet-presets">
+                    <button class="preset-btn">Min</button>
+                    <button class="preset-btn">x2</button>
+                    <button class="preset-btn">½</button>
+                    <button class="preset-btn">Max</button>
+                </div>
+                <div class="bet-title" style="margin-top:12px">🎯 Target</div>
+                <input value="50.00" />
+                <button class="bet-btn play">🎲 ROLL DICE</button>
+            </div>
+            <div class="history-panel">
+                <div class="hist-title">📋 Recent Rolls</div>
+                <div class="hist-row"><span>Roll: 72.31</span><span class="win">+9.80 EUR</span></div>
+                <div class="hist-row"><span>Roll: 23.45</span><span class="loss">-10.00 EUR</span></div>
+                <div class="hist-row"><span>Roll: 88.12</span><span class="win">+9.80 EUR</span></div>
+                <div class="hist-row"><span>Roll: 15.67</span><span class="loss">-10.00 EUR</span></div>
+                <div class="hist-row"><span>Roll: 91.03</span><span class="win">+9.80 EUR</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CRASH GAME -->
+<div class="page" id="page-crash">
+    <div class="game-header">
+        <button class="back-btn" onclick="showPage('lobby')">← Lobby</button>
+        <span class="title">🎯 Crash — Cash Out Before It Crashes!</span>
+    </div>
+    <div class="game-area">
+        <div class="game-main">
+            <div style="text-align:center;">
+                <div style="font-size:72px; font-weight:800; color:#10eb04; text-shadow: 0 0 30px rgba(16,235,4,0.4);">2.47x</div>
+                <div style="color:rgba(255,255,255,0.4); font-size:12px; margin-top:8px;">Multiplier rising...</div>
+                <div style="margin-top:20px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                    <span style="background:rgba(235,4,4,0.2); color:#eb0404; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700;">1.24x</span>
+                    <span style="background:rgba(16,235,4,0.2); color:#10eb04; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700;">3.81x</span>
+                    <span style="background:rgba(235,4,4,0.2); color:#eb0404; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700;">1.02x</span>
+                    <span style="background:rgba(16,235,4,0.2); color:#10eb04; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700;">7.55x</span>
+                    <span style="background:rgba(16,235,4,0.2); color:#10eb04; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700;">2.10x</span>
+                </div>
+            </div>
+        </div>
+        <div class="game-sidebar">
+            <div class="bet-panel">
+                <div class="bet-title">💰 Bet Amount</div>
+                <input value="25.00" />
+                <div class="bet-title" style="margin-top:12px">🎯 Auto Cashout</div>
+                <input value="2.00" />
+                <button class="bet-btn green">💰 CASH OUT (2.47x)</button>
+            </div>
+            <div class="history-panel">
+                <div class="hist-title">👥 Live Bets</div>
+                <div class="hist-row"><span>Player1</span><span>25 EUR</span><span class="win">Cashed 2.1x</span></div>
+                <div class="hist-row"><span>Player2</span><span>50 EUR</span><span style="color:#facc15">Playing...</span></div>
+                <div class="hist-row"><span>Player3</span><span>10 EUR</span><span class="win">Cashed 1.5x</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Placeholder pages -->
+<div class="page" id="page-poker"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">🃏 Texas Hold'em Poker</span></div><div class="game-area"><div class="game-main"><div class="placeholder">Poker Table</div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Buy-in</div><input value="100"><button class="bet-btn play">JOIN TABLE</button></div></div></div></div>
+<div class="page" id="page-blackjack"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">🃏 Blackjack</span></div><div class="game-area"><div class="game-main"><div class="placeholder">Blackjack Table</div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Bet</div><input value="25"><button class="bet-btn play">DEAL</button></div></div></div></div>
+<div class="page" id="page-slots"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">🎰 Crypto Slots</span></div><div class="game-area"><div class="game-main"><div class="placeholder">Slot Machine</div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Bet per spin</div><input value="1"><button class="bet-btn play">🎰 SPIN</button></div></div></div></div>
+<div class="page" id="page-sports"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">⚽ Sports Betting</span></div><div class="game-area"><div class="game-main"><div class="placeholder">Match List + Odds</div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Bet Slip</div><button class="bet-btn play">PLACE BET</button></div></div></div></div>
+<div class="page" id="page-coinflip"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">🪙 Coin Flip</span></div><div class="game-area"><div class="game-main"><div style="text-align:center"><div style="font-size:80px">🪙</div><div style="margin-top:16px; display:flex; gap:12px; justify-content:center;"><button class="bet-btn green" style="width:auto; padding:12px 40px;">HEADS</button><button class="bet-btn red" style="width:auto; padding:12px 40px;">TAILS</button></div></div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Bet</div><input value="10"><button class="bet-btn play">FLIP!</button></div></div></div></div>
+<div class="page" id="page-binary"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">📊 Binary Options</span></div><div class="game-area"><div class="game-main"><div class="placeholder">Price Chart + Timer</div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Amount</div><input value="50"><div style="display:flex; gap:8px; margin-top:12px;"><button class="bet-btn green" style="flex:1">📈 UP</button><button class="bet-btn red" style="flex:1">📉 DOWN</button></div></div></div></div></div>
+<div class="page" id="page-auction"><div class="game-header"><button class="back-btn" onclick="showPage('lobby')">← Lobby</button><span class="title">🏆 Auction</span></div><div class="game-area"><div class="game-main"><div class="placeholder">Auction Item + Timer</div></div><div class="game-sidebar"><div class="bet-panel"><div class="bet-title">Your Bid</div><input value="100"><button class="bet-btn play">🏆 PLACE BID</button></div></div></div></div>
+
+</div>
+</div>
+
+<div class="statusbar">
+    <span>🎰 OmniBus Casino v0.1.0</span>
+    <span>|</span>
+    <span class="pf">Provably Fair: SHA-256</span>
+    <span>|</span>
+    <span>Games: 10</span>
+    <span style="flex:1"></span>
+    <span>🔐 Wallet: SuperVault Connected</span>
+</div>
+
+<script>
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if(event && event.currentTarget) event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>

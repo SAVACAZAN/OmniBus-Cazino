@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OPTION 3 — WebGL 3D Poker Room</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; overflow: hidden; height: 100vh; display: flex; flex-direction: column; font-family: Arial; }
+.label-bar { padding: 8px 16px; background: #eb0404; color: #fff; font-weight: 900; font-size: 14px; text-align: center; }
+canvas { flex: 1; display: block; }
+.overlay {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
+    padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(250,204,21,0.15);
+    display: flex; gap: 8px;
+}
+.overlay button { padding: 8px 20px; border: none; border-radius: 5px; font-weight: 700; font-size: 12px; cursor: pointer; }
+.overlay .fold { background: #444; color: #aaa; }
+.overlay .call { background: #3b82f6; color: #fff; }
+.overlay .raise { background: #facc15; color: #000; }
+.overlay .allin { background: #eb0404; color: #fff; }
+.info-overlay {
+    position: absolute; top: 10px; left: 16px; color: #facc15; font-size: 18px; font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+.info2-overlay { position: absolute; top: 36px; left: 16px; color: #888; font-size: 11px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+.hero-info {
+    position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+    color: #10eb04; font-size: 14px; font-weight: 800;
+    text-shadow: 0 0 10px rgba(16,235,4,0.4);
+}
+</style>
+</head>
+<body>
+<div class="label-bar">OPTION 3 — WebGL / OpenGL 3D (Real 3D Camera, Lighting, Shadows)</div>
+
+<canvas id="gl"></canvas>
+
+<div class="info-overlay">♠ OMNIBUS POKER 3D</div>
+<div class="info2-overlay">Diamond Room · 3D Camera View · Real-time Lighting</div>
+<div class="hero-info">♠ Pair of Aces — Your Turn</div>
+
+<div class="overlay">
+    <button class="fold">Fold</button>
+    <button class="call">Call 300</button>
+    <button class="raise">Raise 1,000</button>
+    <button class="allin">All-In</button>
+</div>
+
+<script>
+// Simple WebGL 3D scene — Poker Table
+const canvas = document.getElementById('gl');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight - 36;
+
+const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+if (!gl) {
+    document.body.innerHTML = '<div style="color:#fff;padding:40px;text-align:center;font-size:18px;">WebGL not supported. In Qt, we use QOpenGLWidget which works on all GPUs.</div>';
+} else {
+    // Vertex shader
+    const vsSource = `
+        attribute vec4 aPos;
+        attribute vec3 aNormal;
+        attribute vec2 aUV;
+        uniform mat4 uMVP;
+        uniform mat4 uModel;
+        varying vec3 vNormal;
+        varying vec3 vWorldPos;
+        varying vec2 vUV;
+        void main() {
+            gl_Position = uMVP * aPos;
+            vNormal = mat3(uModel) * aNormal;
+            vWorldPos = (uModel * aPos).xyz;
+            vUV = aUV;
+        }
+    `;
+
+    // Fragment shader with lighting
+    const fsSource = `
+        precision mediump float;
+        varying vec3 vNormal;
+        varying vec3 vWorldPos;
+        varying vec2 vUV;
+        uniform vec3 uLightPos;
+        uniform vec3 uColor;
+        uniform float uAmbient;
+        void main() {
+            vec3 N = normalize(vNormal);
+            vec3 L = normalize(uLightPos - vWorldPos);
+            float diff = max(dot(N, L), 0.0);
+            vec3 color = uColor * (uAmbient + diff * 0.7);
+            // Subtle vignette
+            float dist = length(vUV - vec2(0.5));
+            color *= 1.0 - dist * 0.3;
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `;
+
+    function createShader(type, source) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, source);
+        gl.compileShader(s);
+        return s;
+    }
+
+    const vs = createShader(gl.VERTEX_SHADER, vsSource);
+    const fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    // Create ellipse (table) geometry
+    function createEllipse(rx, ry, segments) {
+        const verts = [0, 0, 0, 0, 1, 0, 0.5, 0.5]; // center
+        const indices = [];
+        for (let i = 0; i <= segments; i++) {
+            const a = (i / segments) * Math.PI * 2;
+            const x = Math.cos(a) * rx;
+            const z = Math.sin(a) * ry;
+            verts.push(x, 0, z, 0, 1, 0, (x/rx+1)/2, (z/ry+1)/2);
+            if (i > 0) {
+                indices.push(0, i, i + 1);
+            }
+        }
+        return { verts: new Float32Array(verts), indices: new Uint16Array(indices) };
+    }
+
+    // Create card quad
+    function createQuad(w, h) {
+        return {
+            verts: new Float32Array([
+                -w/2, 0, -h/2,  0,1,0,  0,0,
+                 w/2, 0, -h/2,  0,1,0,  1,0,
+                 w/2, 0,  h/2,  0,1,0,  1,1,
+                -w/2, 0,  h/2,  0,1,0,  0,1,
+            ]),
+            indices: new Uint16Array([0,1,2, 0,2,3])
+        };
+    }
+
+    // Matrix math
+    function mat4Perspective(fov, aspect, near, far) {
+        const f = 1.0 / Math.tan(fov / 2);
+        return new Float32Array([
+            f/aspect, 0, 0, 0,
+            0, f, 0, 0,
+            0, 0, (far+near)/(near-far), -1,
+            0, 0, 2*far*near/(near-far), 0
+        ]);
+    }
+
+    function mat4LookAt(eye, center, up) {
+        const z = normalize([eye[0]-center[0], eye[1]-center[1], eye[2]-center[2]]);
+        const x = normalize(cross(up, z));
+        const y = cross(z, x);
+        return new Float32Array([
+            x[0], y[0], z[0], 0,
+            x[1], y[1], z[1], 0,
+            x[2], y[2], z[2], 0,
+            -dot(x,eye), -dot(y,eye), -dot(z,eye), 1
+        ]);
+    }
+
+    function mat4Identity() { return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]); }
+    function mat4Translate(m, x, y, z) {
+        const r = new Float32Array(m);
+        r[12] += x; r[13] += y; r[14] += z;
+        return r;
+    }
+
+    function mat4Multiply(a, b) {
+        const r = new Float32Array(16);
+        for (let i = 0; i < 4; i++)
+            for (let j = 0; j < 4; j++) {
+                r[i*4+j] = 0;
+                for (let k = 0; k < 4; k++)
+                    r[i*4+j] += a[k*4+j] * b[i*4+k];
+            }
+        return r;
+    }
+
+    function normalize(v) { const l = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); return [v[0]/l,v[1]/l,v[2]/l]; }
+    function cross(a,b) { return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+    function dot(a,b) { return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+
+    // Setup
+    gl.enable(gl.DEPTH_TEST);
+    gl.clearColor(0.04, 0.05, 0.07, 1);
+
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    const aNormal = gl.getAttribLocation(prog, 'aNormal');
+    const aUV = gl.getAttribLocation(prog, 'aUV');
+    const uMVP = gl.getUniformLocation(prog, 'uMVP');
+    const uModel = gl.getUniformLocation(prog, 'uModel');
+    const uLightPos = gl.getUniformLocation(prog, 'uLightPos');
+    const uColor = gl.getUniformLocation(prog, 'uColor');
+    const uAmbient = gl.getUniformLocation(prog, 'uAmbient');
+
+    const table = createEllipse(2.5, 1.5, 64);
+    const tableBorder = createEllipse(2.7, 1.7, 64);
+    const card = createQuad(0.18, 0.26);
+
+    function createBuffer(data, type) {
+        const buf = gl.createBuffer();
+        gl.bindBuffer(type, buf);
+        gl.bufferData(type, data, gl.STATIC_DRAW);
+        return buf;
+    }
+
+    // Buffers
+    const tableVB = createBuffer(table.verts, gl.ARRAY_BUFFER);
+    const tableIB = createBuffer(table.indices, gl.ELEMENT_ARRAY_BUFFER);
+    const borderVB = createBuffer(tableBorder.verts, gl.ARRAY_BUFFER);
+    const borderIB = createBuffer(tableBorder.indices, gl.ELEMENT_ARRAY_BUFFER);
+    const cardVB = createBuffer(card.verts, gl.ARRAY_BUFFER);
+    const cardIB = createBuffer(card.indices, gl.ELEMENT_ARRAY_BUFFER);
+
+    function drawMesh(vb, ib, count, model, color, ambient) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+        gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 32, 0);
+        gl.vertexAttribPointer(aNormal, 3, gl.FLOAT, false, 32, 12);
+        gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, 32, 24);
+        gl.enableVertexAttribArray(aPos);
+        gl.enableVertexAttribArray(aNormal);
+        gl.enableVertexAttribArray(aUV);
+
+        const proj = mat4Perspective(0.8, canvas.width/canvas.height, 0.1, 50);
+        const view = mat4LookAt([0, 4, 5], [0, 0, 0], [0, 1, 0]);
+        const mvp = mat4Multiply(proj, mat4Multiply(view, model));
+
+        gl.uniformMatrix4fv(uMVP, false, mvp);
+        gl.uniformMatrix4fv(uModel, false, model);
+        gl.uniform3fv(uColor, color);
+        gl.uniform1f(uAmbient, ambient || 0.3);
+
+        gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
+    }
+
+    // Animation loop
+    let time = 0;
+    function render() {
+        time += 0.01;
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Light position (ceiling lamp, slightly moving)
+        gl.uniform3f(uLightPos, Math.sin(time*0.3) * 0.5, 5, Math.cos(time*0.3) * 0.3);
+
+        // Floor
+        const floor = mat4Translate(mat4Identity(), 0, -0.15, 0);
+        // Scale floor
+        floor[0] = 8; floor[10] = 8;
+        drawMesh(tableVB, tableIB, table.indices.length, floor, [0.05, 0.06, 0.08], 0.2);
+
+        // Table border (wood)
+        const bm = mat4Translate(mat4Identity(), 0, -0.02, 0);
+        drawMesh(borderVB, borderIB, tableBorder.indices.length, bm, [0.25, 0.12, 0.05], 0.35);
+
+        // Table felt (green)
+        const tm = mat4Identity();
+        drawMesh(tableVB, tableIB, table.indices.length, tm, [0.1, 0.35, 0.12], 0.35);
+
+        // Community cards (5 cards on table)
+        for (let i = 0; i < 5; i++) {
+            const cx = (i - 2) * 0.22;
+            const cm = mat4Translate(mat4Identity(), cx, 0.005, 0);
+            const cardColor = i < 4 ? [0.95, 0.95, 0.92] : [0.1, 0.2, 0.5]; // 4 face-up, 1 face-down
+            drawMesh(cardVB, cardIB, card.indices.length, cm, cardColor, 0.5);
+        }
+
+        // Player positions (chips/markers around table)
+        const numPlayers = 7;
+        for (let i = 0; i < numPlayers; i++) {
+            const angle = (i / numPlayers) * Math.PI * 2 - Math.PI/2;
+            const px = Math.cos(angle) * 2.0;
+            const pz = Math.sin(angle) * 1.2;
+
+            // Player card pair
+            for (let c = 0; c < 2; c++) {
+                const pm = mat4Translate(mat4Identity(), px + (c-0.5)*0.12, 0.003, pz);
+                const isHero = (i === 0);
+                const color = isHero ? [0.95, 0.95, 0.92] : [0.1, 0.2, 0.5];
+                drawMesh(cardVB, cardIB, card.indices.length, pm, color, 0.45);
+            }
+
+            // Chip (small colored circle on table)
+            const chipM = mat4Translate(mat4Identity(), px * 0.7, 0.01, pz * 0.7);
+            chipM[0] = 0.08; chipM[10] = 0.08;
+            const chipColors = [[0.9,0.8,0.1],[0.8,0,0],[0.2,0.5,0.9],[0.1,0.8,0.1],[0.9,0.8,0.1],[0.8,0,0],[0.2,0.5,0.9]];
+            drawMesh(tableVB, tableIB, table.indices.length, chipM, chipColors[i], 0.5);
+        }
+
+        // Pot chips (center)
+        for (let i = 0; i < 6; i++) {
+            const cm = mat4Translate(mat4Identity(), (i-2.5)*0.06, 0.01 + i*0.004, -0.3);
+            cm[0] = 0.06; cm[10] = 0.06;
+            drawMesh(tableVB, tableIB, table.indices.length, cm, [0.9, 0.75, 0.1], 0.5);
+        }
+
+        requestAnimationFrame(render);
+    }
+    render();
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 36;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    });
+}
+</script>
+</body>
+</html>
