@@ -10,7 +10,7 @@ public:
     explicit PokerClient(QObject* parent = nullptr);
     ~PokerClient();
 
-    void connectToServer(const QString& url = "ws://localhost:9999");
+    void connectToServer(const QString& url = "ws://193.219.97.147:9999");
     void disconnect();
     bool isConnected() const;
 

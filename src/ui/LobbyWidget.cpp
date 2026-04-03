@@ -63,10 +63,10 @@ void LobbyWidget::setupUI()
     serverLabel->setStyleSheet(lblStyle);
     connLayout->addWidget(serverLabel);
 
-    m_serverEdit = new QLineEdit("ws://localhost:9999");
-    m_serverEdit->setFixedWidth(170);
+    m_serverEdit = new QLineEdit("ws://193.219.97.147:9999");
+    m_serverEdit->setFixedWidth(200);
     m_serverEdit->setStyleSheet(inputStyle);
-    m_serverEdit->setPlaceholderText("ws://192.168.1.130:9999");
+    m_serverEdit->setPlaceholderText("ws://193.219.97.147:9999");
     connLayout->addWidget(m_serverEdit);
 
     // Player name
@@ -217,7 +217,7 @@ void LobbyWidget::connectToServer()
     }
 
     QString serverAddr = m_serverEdit->text().trimmed();
-    if (serverAddr.isEmpty()) serverAddr = "ws://localhost:9999";
+    if (serverAddr.isEmpty()) serverAddr = "ws://193.219.97.147:9999";
     if (!serverAddr.startsWith("ws://") && !serverAddr.startsWith("wss://"))
         serverAddr = "ws://" + serverAddr;
     if (!serverAddr.contains(":") || serverAddr.count(":") < 2)

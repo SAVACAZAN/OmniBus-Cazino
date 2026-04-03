@@ -9,6 +9,10 @@
 #include <QTimer>
 #include <QFile>
 
+// ── OmniBus Cloud Server ──
+// Players auto-connect to this VPS server for multiplayer
+static const QString OMNIBUS_CLOUD_SERVER = "ws://193.219.97.147:9999";
+
 // Games
 #include "games/DiceGame.h"
 #include "games/CrashGame.h"
@@ -98,6 +102,16 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_loginWidget, &LoginWidget::loginSuccess, this, [this](const QString& uid, const QString& username) {
         Q_UNUSED(uid);
         showCasino();
+
+        // Auto-connect to OmniBus Cloud Server for multiplayer
+        if (!m_pokerClient->isConnected()) {
+            m_pokerClient->connectToServer(OMNIBUS_CLOUD_SERVER);
+            // Auto-login with casino username and balance
+            connect(m_pokerClient, &PokerClient::connected, this, [this, username]() {
+                m_pokerClient->login(username, m_engine->getPlayer().balance("EUR"));
+                statusBar()->showMessage("Connected to OmniBus Cloud Server!", 5000);
+            }, Qt::SingleShotConnection);
+        }
     });
 
     connect(m_engine, &BettingEngine::balanceChanged, this, [this]() {
